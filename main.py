@@ -1,55 +1,33 @@
 import cv2
-import torch
-import torchvision.transforms as T
-from facenet_pytorch import MTCNN
+import dlib
 
-mtcnn = MTCNN(keep_all=True, device="cuda" if torch.cuda.is_available() else "cpu") # multi-task cascaded cnn
+face_detector = dlib.get_frontal_face_detector()
+landmark_predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 
 cam = cv2.VideoCapture(0)
-
-clahe = cv2.createCLAHE(
-    clipLimit=2.0, tileGridSize=(8, 8)
-)  # contrast limited adaptive histogram equalization
 
 while True:
     ret, frame = cam.read()
     if not ret:
         break
 
-    yCbCr_frame = cv2.cvtColor(
-        frame, cv2.COLOR_BGR2YCrCb
-    )  # convert frame from BGR to YCbCr color space.
+    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    yCbCr_frame[:, :, 0] = clahe.apply(
-        yCbCr_frame[:, :, 0]
-    )  # apply CLAHE to the luma component (Y channel) of the YCbCr image.
+    faces = face_detector(gray_frame)
 
-    clahe_frame = cv2.cvtColor(
-        yCbCr_frame, cv2.COLOR_YCrCb2BGR
-    )  # convert the YCbCr image back to BGR color space.
+    for face in faces:
+        x1, y1, x2, y2 = (face.left(), face.top(), face.right(), face.bottom())
 
-    rgb_frame = cv2.cvtColor(
-        clahe_frame, cv2.COLOR_BGR2RGB
-    )  # convert frame from BGR to RGB
+        landmarks = landmark_predictor(frame, face)
 
-    boxes, probs = mtcnn.detect(rgb_frame)  # detect faces
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-    if boxes is not None:
-        for box, prob in zip(boxes, probs):
-            if prob > 0.90:  # only consider faces with confidence > 90%
-                x1, y1, x2, y2 = [int(coord) for coord in box]
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                cv2.putText(
-                    frame,
-                    f"Face: {prob:.2f}",
-                    (x1, y1 - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5,
-                    (36, 255, 12),
-                    1,
-                )
+        for i in range(68):
+            x = landmarks.part(i).x
+            y = landmarks.part(i).y
+            cv2.circle(frame, (x, y), 2, (0, 0, 255), -1)
 
-    cv2.imshow("Face Detection", frame)
+    cv2.imshow("Face & Landmark Detection", frame)
 
     if cv2.waitKey(1) == ord("q"):
         break
