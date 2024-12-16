@@ -8,7 +8,7 @@
 - [Single Shot MultiBox Detector, Liu et al.](https://arxiv.org/abs/1512.02325)
 - [dlib](https://github.com/davisking/dlib)
 
-### Considered but Unused Methods
+### Considered but unused methods
 
 - [PyTorch - SSD](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/Detection/SSD)
 - [PyTorch - MTCNN](https://github.com/timesler/facenet-pytorch)
