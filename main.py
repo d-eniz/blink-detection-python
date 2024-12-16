@@ -20,8 +20,6 @@ while True:
 
         landmarks = landmark_predictor(frame, face)
 
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
         for i in range(68):
             x = landmarks.part(i).x
             y = landmarks.part(i).y
